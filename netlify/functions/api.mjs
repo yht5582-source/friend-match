@@ -97,8 +97,10 @@ export default async function handler(req) {
       if (route === "/api/auth/request") {
         const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
         if (!EMAIL_RE.test(email)) return fail("電子信箱格式不正確");
-        // 正式環境若沒接郵件服務，就不能發碼——否則等於任何人都能宣稱擁有任何信箱
-        if (!mailer.mailConfig().configured && process.env.CONTEXT === "production") {
+        // 沒接郵件服務就不能發碼。這裡刻意不看 CONTEXT 之類的環境判斷——
+        // 那是建置期變數，Function 執行時讀不到，賭它存在就等於把驗證機制關掉。
+        // 線上版一律 fail-closed：寧可登不進來，也不要任何人都能冒充任何信箱。
+        if (!mailer.mailConfig().configured) {
           return fail("這個站台還沒設定郵件服務（RESEND_API_KEY），暫時無法登入。"
                       + "請站台管理者到 Netlify 的 Environment variables 補上。", 503);
         }
@@ -107,13 +109,8 @@ export default async function handler(req) {
         const { status, note } = await mailer.send(
           email, auth.CODE_MAIL_SUBJECT(code), auth.CODE_MAIL_BODY(code));
         if (status === "error") return fail(note, 502);
-        const out = {
-          ok: true, sent: status === "sent",
-          note: status === "sent" ? `驗證碼已寄到 ${maskEmail(email)}，10 分鐘內有效` : note,
-        };
-        // 只有在完全沒設定郵件服務時才回傳驗證碼，方便試玩
-        if (!mailer.mailConfig().configured) out.devCode = code;
-        return json(out);
+        // 驗證碼只走信箱，絕不回傳給前端
+        return json({ ok: true, sent: true, note: `驗證碼已寄到 ${maskEmail(email)}，10 分鐘內有效` });
       }
 
       if (route === "/api/auth/verify") {

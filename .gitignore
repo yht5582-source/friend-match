@@ -1,0 +1,7 @@
+# 執行時資料：含真實信箱、Session token、驗證碼、SMTP 憑證——絕對不要上傳
+data/*
+!data/README.md
+
+.DS_Store
+__pycache__/
+*.pyc

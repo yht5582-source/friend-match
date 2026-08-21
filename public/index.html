@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>有緣配對站 · 不只是找對象</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap bar">
+    <div class="brand">
+      <span class="logo">緣</span>
+      <div>
+        <h1>有緣配對站</h1>
+        <p>找伴侶、找旅伴、找牌搭子 —— 都從一封信開始</p>
+      </div>
+    </div>
+    <div class="topright">
+      <span class="whochip" id="whochip" hidden></span>
+      <button class="mini" id="btn-logout" hidden>登出</button>
+    </div>
+    <nav class="tabs" id="tabs" hidden>
+      <button class="tab is-on" data-view="profile">① 我的檔案</button>
+      <button class="tab" data-view="match">② 配對結果</button>
+      <button class="tab" data-view="outbox">③ 寄件備份</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ================= 登入 / 信箱驗證 ================= -->
+  <section class="view is-on" id="view-login">
+    <div class="gate">
+      <div class="card">
+        <h2 class="card-h"><span class="num">✉</span>先驗證你的信箱</h2>
+        <p class="lead">不用設密碼。輸入信箱後我們寄一組六位數驗證碼給你，
+          輸入正確就完成驗證並登入。<br>
+          驗證過的信箱才會進入配對池——這樣別人配對到你時，信才寄得到你手上。</p>
+
+        <div id="step-email">
+          <label class="fld full"><span>電子信箱</span>
+            <input id="g-email" type="email" placeholder="you@example.com" autocomplete="email"></label>
+          <div class="actionbar" style="margin-top:14px">
+            <button class="btn primary" id="btn-code">寄驗證碼給我</button>
+            <span class="savemsg" id="g-msg"></span>
+          </div>
+        </div>
+
+        <div id="step-code" hidden>
+          <p class="notice" id="g-sent"></p>
+          <label class="fld full"><span>六位數驗證碼</span>
+            <input id="g-code" type="text" inputmode="numeric" maxlength="6"
+                   placeholder="000000" class="codebox" autocomplete="one-time-code"></label>
+          <div class="actionbar" style="margin-top:14px">
+            <button class="btn primary" id="btn-verify">驗證並登入</button>
+            <button class="btn ghost" id="btn-back">換一個信箱</button>
+            <span class="savemsg" id="g-msg2"></span>
+          </div>
+        </div>
+      </div>
+      <p class="gatefoot">你的信箱只有系統看得到。其他會員在畫面上只會看到遮罩後的位址，
+        除非你主動寫信給對方，對方回信時才會看到你的信箱。</p>
+    </div>
+  </section>
+
+  <!-- ================= 我的檔案 ================= -->
+  <section class="view" id="view-profile">
+    <div class="notice" id="whoami" hidden></div>
+
+    <div class="card">
+      <h2 class="card-h"><span class="num">1</span>基本資料</h2>
+      <div class="grid">
+        <label class="fld"><span>姓名 <b class="req">*</b></span>
+          <input id="f-name" type="text" placeholder="王小明" autocomplete="name"></label>
+        <label class="fld"><span>暱稱（別人看到的名字）</span>
+          <input id="f-nickname" type="text" placeholder="小明"></label>
+        <label class="fld"><span>電子信箱（已驗證）</span>
+          <input id="f-email" type="email" readonly>
+          <em class="hint">已完成驗證，不可修改。別人只會看到遮罩後的信箱</em></label>
+        <label class="fld"><span>居住城市</span>
+          <input id="f-city" type="text" placeholder="台北"></label>
+        <label class="fld"><span>年齡 <b class="req">*</b></span>
+          <input id="f-age" type="number" min="18" max="99" placeholder="30"></label>
+        <label class="fld"><span>身高 (cm)</span>
+          <input id="f-height" type="number" min="100" max="230" placeholder="170"></label>
+        <label class="fld"><span>體重 (kg)</span>
+          <input id="f-weight" type="number" min="30" max="200" placeholder="60"></label>
+        <label class="fld"><span>星座</span>
+          <select id="f-zodiac"></select></label>
+        <label class="fld"><span>婚姻狀況</span>
+          <select id="f-marital"></select></label>
+        <label class="fld"><span>交友狀況</span>
+          <select id="f-relationship"></select></label>
+      </div>
+      <label class="fld full"><span>一句話介紹自己</span>
+        <textarea id="f-bio" rows="3" maxlength="400"
+          placeholder="例：出版社編輯，喜歡在陌生的城市迷路。相信好的關係是兩個人各自完整。"></textarea>
+        <em class="hint">這段話會被系統代寫的信引用，寫得越具體，信越有溫度</em></label>
+    </div>
+
+    <div class="card">
+      <h2 class="card-h"><span class="num">2</span>我想找什麼樣的緣分</h2>
+      <p class="lead">可複選。不一定要是感情——旅伴、牌搭子、球友都算。</p>
+      <div class="chips" id="p-purposes"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-h"><span class="num">3</span>我的能力・興趣・嗜好</h2>
+      <p class="lead">這些是別人配對你的依據，選得越完整越容易被找到。可自行新增。</p>
+      <div class="tagblock">
+        <h3>能力 / 專長</h3><div class="chips" id="p-abilities"></div>
+        <div class="addrow"><input type="text" data-add="p-abilities" placeholder="其他能力…"><button class="mini" data-addbtn="p-abilities">＋ 新增</button></div>
+      </div>
+      <div class="tagblock">
+        <h3>興趣</h3><div class="chips" id="p-interests"></div>
+        <div class="addrow"><input type="text" data-add="p-interests" placeholder="其他興趣…"><button class="mini" data-addbtn="p-interests">＋ 新增</button></div>
+      </div>
+      <div class="tagblock">
+        <h3>嗜好</h3><div class="chips" id="p-hobbies"></div>
+        <div class="addrow"><input type="text" data-add="p-hobbies" placeholder="其他嗜好…"><button class="mini" data-addbtn="p-hobbies">＋ 新增</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-h"><span class="num">4</span>理想對象的條件</h2>
+      <p class="lead">勾選「不在意」就不會用這項篩選。</p>
+      <div class="grid3">
+        <div class="rangebox">
+          <div class="rangehead"><span>年齡範圍</span>
+            <label class="anyck"><input type="checkbox" id="w-age-any" checked>不在意</label></div>
+          <div class="rangeinputs"><input type="number" id="w-age-min" placeholder="下限" min="18" max="99"><i>—</i><input type="number" id="w-age-max" placeholder="上限" min="18" max="99"></div>
+        </div>
+        <div class="rangebox">
+          <div class="rangehead"><span>身高範圍 (cm)</span>
+            <label class="anyck"><input type="checkbox" id="w-height-any" checked>不在意</label></div>
+          <div class="rangeinputs"><input type="number" id="w-height-min" placeholder="下限"><i>—</i><input type="number" id="w-height-max" placeholder="上限"></div>
+        </div>
+        <div class="rangebox">
+          <div class="rangehead"><span>體重範圍 (kg)</span>
+            <label class="anyck"><input type="checkbox" id="w-weight-any" checked>不在意</label></div>
+          <div class="rangeinputs"><input type="number" id="w-weight-min" placeholder="下限"><i>—</i><input type="number" id="w-weight-max" placeholder="上限"></div>
+        </div>
+      </div>
+
+      <div class="tagblock">
+        <h3>可接受的星座 <label class="anyck"><input type="checkbox" id="w-zodiac-any" checked>不在意</label></h3>
+        <div class="chips" id="w-zodiac"></div>
+      </div>
+      <div class="tagblock">
+        <h3>可接受的婚姻狀況 <label class="anyck"><input type="checkbox" id="w-marital-any" checked>不在意</label></h3>
+        <div class="chips" id="w-marital"></div>
+      </div>
+      <div class="tagblock">
+        <h3>可接受的交友狀況 <label class="anyck"><input type="checkbox" id="w-relationship-any" checked>不在意</label></h3>
+        <div class="chips" id="w-relationship"></div>
+      </div>
+      <div class="tagblock">
+        <h3>希望對方也想找 <em class="hint inline">（交友目的）</em></h3>
+        <div class="chips" id="w-purposes"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-h"><span class="num">5</span>期望對象具備的能力・興趣・嗜好 <em class="tagpill">可加權</em></h2>
+      <p class="lead">點選後到下方調整重要程度。<b>100% = 必要條件</b>，對方沒有就直接不列入配對。</p>
+      <div class="tagblock"><h3>能力 / 專長</h3><div class="chips" id="w-abilities"></div>
+        <div class="addrow"><input type="text" data-add="w-abilities" placeholder="其他能力…"><button class="mini" data-addbtn="w-abilities">＋ 新增</button></div></div>
+      <div class="tagblock"><h3>興趣</h3><div class="chips" id="w-interests"></div>
+        <div class="addrow"><input type="text" data-add="w-interests" placeholder="其他興趣…"><button class="mini" data-addbtn="w-interests">＋ 新增</button></div></div>
+      <div class="tagblock"><h3>嗜好</h3><div class="chips" id="w-hobbies"></div>
+        <div class="addrow"><input type="text" data-add="w-hobbies" placeholder="其他嗜好…"><button class="mini" data-addbtn="w-hobbies">＋ 新增</button></div></div>
+
+      <div class="weights">
+        <h3>已選條件與權重</h3>
+        <div id="weight-list" class="wlist"><p class="empty">還沒有選擇任何期望條件。</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-h"><span class="num">6</span>帳號與隱私</h2>
+      <label class="switchrow">
+        <input type="checkbox" id="f-optout">
+        <span><b>暫停配對</b><br>
+          <em class="hint">開啟後你不會出現在任何人的配對結果，也不會再收到來信。
+            信件底部的「停止接收」連結按下去，也是切到這個狀態。</em></span>
+      </label>
+      <div class="actionbar" style="margin-top:16px">
+        <button class="btn ghost danger" id="btn-delete">永久刪除我的檔案</button>
+        <span class="savemsg" id="acctmsg"></span>
+      </div>
+    </div>
+
+    <div class="actionbar">
+      <button class="btn primary" id="btn-save">儲存檔案並開始配對</button>
+      <button class="btn ghost" id="btn-seed">灌入 12 位示範會員</button>
+      <button class="btn ghost" id="btn-clear">清空表單</button>
+      <span class="savemsg" id="savemsg"></span>
+    </div>
+  </section>
+
+  <!-- ================= 配對結果 ================= -->
+  <section class="view" id="view-match">
+    <div class="matchhead">
+      <div>
+        <h2>系統為你挑出的人選</h2>
+        <p class="lead" id="match-sub">請先於「我的檔案」儲存資料。</p>
+      </div>
+      <div class="matchtools">
+        <label class="anyck"><input type="checkbox" id="show-blocked">顯示被條件淘汰的人</label>
+        <button class="btn small" id="btn-refresh">重新配對</button>
+        <button class="btn primary small" id="btn-best">一鍵聯絡最速配</button>
+      </div>
+    </div>
+    <div id="match-list" class="cards"></div>
+  </section>
+
+  <!-- ================= 寄件備份 ================= -->
+  <section class="view" id="view-outbox">
+    <h2>寄件備份</h2>
+    <p class="lead" id="outbox-sub"></p>
+    <div id="outbox-list" class="cards"></div>
+  </section>
+</main>
+
+<!-- ================= 寫信視窗 ================= -->
+<div class="modal" id="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <header class="modal-h">
+      <h2 id="m-title">寫信給 …</h2>
+      <button class="x" id="m-close" aria-label="關閉">×</button>
+    </header>
+    <div class="modal-body">
+      <div class="m-shared" id="m-shared"></div>
+
+      <div class="tocard">
+        <div class="tolabel">對方的信箱</div>
+        <div class="torow">
+          <code id="m-to-email">—</code>
+          <button class="mini copybtn" data-copy="m-to-email">複製信箱</button>
+        </div>
+        <p class="hint" id="m-to-hint"></p>
+      </div>
+
+      <div class="seg" id="m-mode">
+        <button class="on" data-mode="self">自己寫</button>
+        <button data-mode="auto">系統代寫（文情並茂）</button>
+      </div>
+      <div class="autoline" id="m-autoline" hidden>
+        <label>文風
+          <select id="m-style"></select>
+        </label>
+        <button class="btn small ghost" id="m-regen">↻ 換一篇</button>
+      </div>
+      <label class="fld full"><span>主旨
+          <button class="mini copybtn" data-copy="m-subject">複製</button></span>
+        <input id="m-subject" type="text" maxlength="150"></label>
+      <label class="fld full"><span>內文
+          <button class="mini copybtn" data-copy="m-body">複製內文</button></span>
+        <textarea id="m-body" rows="14" maxlength="8000"></textarea></label>
+      <p class="mailnote" id="m-note"></p>
+    </div>
+    <footer class="modal-f">
+      <span class="savemsg" id="m-msg"></span>
+      <button class="btn ghost" id="m-cancel">取消</button>
+      <button class="btn ghost" id="m-copyall">複製全部</button>
+      <button class="btn primary" id="m-open">用郵件軟體開啟</button>
+    </footer>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

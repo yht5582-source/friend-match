@@ -85,6 +85,33 @@ Session 以 HttpOnly Cookie 保存 30 天。
 - 退出配對後（`optOut`），你不會出現在任何人的結果中，信箱也不會再被交出去。
 - 「我的檔案 → 帳號與隱私」可**暫停配對**或**永久刪除檔案**（連同寄件備份）。
 
+## 線上版（Netlify）
+
+本機版是 Python，Netlify 不跑 Python 伺服器，所以另外有一份 JavaScript 的 Serverless 版本，
+兩份共用同一個 `public/` 前端：
+
+| | 本機版 | Netlify 版 |
+|---|---|---|
+| 後端 | `server.py`（Python 標準函式庫） | `netlify/functions/api.mjs` |
+| 儲存 | `data/*.json` | Netlify Blobs |
+| 寄驗證碼 | SMTP（`smtplib`） | Resend HTTP API |
+
+配對引擎與信件模板由 Python 版產生成 `.mjs`，兩邊行為一致（已用同一組資料交叉驗證）。
+
+### 部署步驟
+
+1. Netlify → **Add new site → Import an existing project → GitHub**，選這個 repo。
+2. Build 設定會自動從 `netlify.toml` 讀取，不用改（publish `public`，functions `netlify/functions`）。
+3. 部署完成後，到 **Site configuration → Environment variables → Add a variable**，
+   加入 `RESEND_API_KEY`（Scopes 記得包含 **Functions**）。
+4. 若要用自己的網域寄信，再加一個 `MAIL_FROM`，例如 `有緣配對站 <hello@你的網域>`。
+   沒設的話預設用 `onboarding@resend.dev`——注意 Resend 的測試寄件地址**只能寄給你自己**，
+   要讓別人也收得到驗證碼，必須在 Resend 驗證一個網域。
+
+**沒有設定 `RESEND_API_KEY` 時，正式站會直接拒絕發驗證碼**（回 503），
+而不是像本機那樣把驗證碼顯示在畫面上——否則等於任何人都能宣稱擁有任何信箱、
+進來收割其他會員的真實信箱。這是刻意的 fail-closed。
+
 ## 檔案
 
 ```

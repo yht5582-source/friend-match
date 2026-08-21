@@ -1,0 +1,17 @@
+# 靜態檔案在 public/，API 由 netlify/functions/api.mjs 這一支 Function 全包。
+# 注意：金鑰不要寫在這個檔案裡（它會進版控）。
+# RESEND_API_KEY 請設在 Netlify 後台的 Site configuration → Environment variables。
+
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "SAMEORIGIN"

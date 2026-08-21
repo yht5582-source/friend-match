@@ -1,0 +1,11 @@
+{
+  "name": "friend-match",
+  "version": "1.0.0",
+  "description": "有緣配對站：加權配對交友網站",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

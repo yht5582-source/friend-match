@@ -104,9 +104,26 @@ Session 以 HttpOnly Cookie 保存 30 天。
 2. Build 設定會自動從 `netlify.toml` 讀取，不用改（publish `public`，functions `netlify/functions`）。
 3. 部署完成後，到 **Site configuration → Environment variables → Add a variable**，
    加入 `RESEND_API_KEY`（Scopes 記得包含 **Functions**）。
-4. 若要用自己的網域寄信，再加一個 `MAIL_FROM`，例如 `有緣配對站 <hello@你的網域>`。
-   沒設的話預設用 `onboarding@resend.dev`——注意 Resend 的測試寄件地址**只能寄給你自己**，
-   要讓別人也收得到驗證碼，必須在 Resend 驗證一個網域。
+4. 加 `MAIL_FROM`，例如 `有緣配對站 <hello@你的網域>`（這個不是機密，不用勾 Secret）。
+
+**`MAIL_FROM` 不是選用的。** 沒設的話會用 Resend 的測試地址 `onboarding@resend.dev`，
+那個地址**只能寄給 Resend 帳號本人**，別人收不到驗證碼 = 別人無法註冊。
+要讓任何人都能註冊，必須在 Resend 驗證一個自己的網域：
+
+1. Resend → Domains → Add Domain → 填你的網域 → 選離使用者近的 Region
+2. Resend 會給三筆 DNS 記錄，到你的 DNS 供應商照抄：
+
+   | Type | Name | 內容 |
+   |---|---|---|
+   | MX | `send` | `feedback-smtp.<區域>.amazonses.com`（優先權 10） |
+   | TXT | `send` | `v=spf1 include:amazonses.com ~all` |
+   | TXT | `resend._domainkey` | DKIM 公鑰 |
+
+   若用 Cloudflare，CNAME 類的記錄要設成「DNS only」（灰雲），不能是 Proxied。
+3. 回 Resend 按 Verify，再把 `MAIL_FROM` 設成該網域下的位址
+
+驗證是否真的成功，別只看 Resend 顯示 verified——**寄一封到跟你無關的信箱**
+（例如 mailinator 的公開信箱）確認收得到，才算數。
 
 **沒有設定 `RESEND_API_KEY` 時，正式站會直接拒絕發驗證碼**（回 503），
 而不是像本機那樣把驗證碼顯示在畫面上——否則等於任何人都能宣稱擁有任何信箱、

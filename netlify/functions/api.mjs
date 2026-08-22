@@ -55,6 +55,9 @@ export default async function handler(req) {
   const url = new URL(req.url);
   const route = url.pathname;
   const token = auth.cookieFrom(req);
+  // 請求本體只能讀一次——req.text() 會把 stream 消耗掉，
+  // 讀第二次會拿到空字串。所以在這裡讀一次，之後全部共用。
+  const body = req.method === "POST" ? await readBody(req) : {};
 
   try {
     // ---------------- 退訂頁（信件中的連結） ----------------
@@ -92,8 +95,6 @@ export default async function handler(req) {
     }
 
     if (req.method === "POST") {
-      const body = await readBody(req);
-
       if (route === "/api/auth/request") {
         const email = String(body.email || "").trim().toLowerCase().slice(0, 120);
         if (!EMAIL_RE.test(email)) return fail("電子信箱格式不正確");
@@ -153,7 +154,6 @@ export default async function handler(req) {
     if (!email) return fail("請先登入", 401);
 
     if (route === "/api/users" && req.method === "POST") {
-      const body = await readBody(req);
       const existing = await store.getUserByEmail(email);
       // 信箱一律以 Session 為準
       const { profile, error } = normalizeProfile(body, existing, email, true);
@@ -191,8 +191,6 @@ export default async function handler(req) {
     }
 
     if (req.method === "POST") {
-      const body = await readBody(req);
-
       if (route === "/api/optout") {
         me.optOut = Boolean(body.optOut);
         me.updatedAt = nowIso();

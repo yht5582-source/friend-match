@@ -10,7 +10,7 @@ import * as matcher from "./lib/matcher.mjs";
 import * as store from "./lib/store.mjs";
 import { demoUsers } from "./lib/seed.mjs";
 import {
-  DAILY_SEND_LIMIT, EMAIL_RE, contactable, maskEmail,
+  DAILY_SEND_LIMIT, EMAIL_RE, contactable, isDemo, maskEmail,
   normalizeProfile, nowIso, sendsToday,
 } from "./lib/profile.mjs";
 
@@ -139,7 +139,7 @@ export default async function handler(req) {
         let added = 0;
         for (const demo of demoUsers()) {
           if (existing.has(demo.email)) continue;
-          const { profile } = normalizeProfile(demo, null, demo.email, true);
+          const { profile } = normalizeProfile({ ...demo, _demo: true }, null, demo.email, true);
           if (!profile) continue;
           await store.putUser(profile);
           added += 1;
@@ -176,8 +176,10 @@ export default async function handler(req) {
       const contacted = new Set(outbox.map((r) => r.toId));
       const byId = new Map(users.map((u) => [u.id, u]));
       for (const r of rows) {
-        r.emailMasked = maskEmail((byId.get(r.id) || {}).email);
+        const cand = byId.get(r.id) || {};
+        r.emailMasked = maskEmail(cand.email);
         r.contacted = contacted.has(r.id);
+        r.isDemo = isDemo(cand);
       }
       return json({
         ok: true, matches: rows, pool: Math.max(0, pool.length - 1),
@@ -202,6 +204,9 @@ export default async function handler(req) {
         const target = await store.getUserById(String(body.toId || ""));
         if (!target) return fail("找不到對象", 404);
         if (!target.verified || target.optOut) return fail("對方目前不接受來信");
+        if (isDemo(target)) {
+          return fail("這是示範帳號，信箱不存在，寄了也不會有人收到");
+        }
 
         if (route === "/api/compose") {
           const shared = matcher.sharedTags(me, target);

@@ -105,6 +105,7 @@ export function normalizeProfile(body, existing, email, verified = false) {
       },
       // 這些欄位由伺服器掌握，前端改不動
       verified: Boolean(existing.verified || verified),
+      isDemo: Boolean(existing.isDemo || body._demo),
       optOut: Boolean(existing.optOut),
       unsubToken: existing.unsubToken || randomBytes(18).toString("base64url"),
       createdAt: existing.createdAt || nowIso(),
@@ -112,6 +113,10 @@ export function normalizeProfile(body, existing, email, verified = false) {
     },
   };
 }
+
+// 示範帳號。既看旗標也看信箱網域，避免線上已存在的資料需要搬移。
+export const isDemo = (u) =>
+  Boolean(u.isDemo) || String(u.email || "").endsWith("@example.com");
 
 export const contactable = (users) => users.filter((u) => u.verified && !u.optOut);
 

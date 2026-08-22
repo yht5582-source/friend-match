@@ -266,3 +266,9 @@ input:focus,select:focus,textarea:focus{
 .copybtn{padding:3px 9px;font-size:11.5px;border-style:solid;background:var(--bg2)}
 .copybtn.done{border-color:var(--good);color:var(--good)}
 .fld>span{display:flex;align-items:center;gap:9px}
+
+/* ---------- 示範帳號 ---------- */
+.badge.demo{background:var(--bg);color:var(--ink3);border:1px solid var(--line2)}
+.mcard:has(.badge.demo){opacity:.82}
+.demonote{font-size:12px;color:var(--ink3);margin-right:auto;align-self:center}
+.mfoot{align-items:center}

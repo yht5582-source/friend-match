@@ -271,6 +271,7 @@ function matchCard(m) {
   var shared = uniq([].concat(m.shared.hobbies, m.shared.interests, m.shared.abilities));
   var badges = "";
   if (m.mutual) badges += '<span class="badge mutual">雙向適配</span>';
+  if (m.isDemo) badges += '<span class="badge demo">示範帳號</span>';
   if (m.contacted) badges += '<span class="badge sent">已聯絡</span>';
   if (blocked) badges += '<span class="badge block">未達你的條件</span>';
 
@@ -302,9 +303,12 @@ function matchCard(m) {
         why +
       "</div>" +
     "</div>" +
-    '<div class="mfoot"><button class="btn primary small" data-write="' + esc(m.id) + '"' +
-      (m.contacted ? " disabled" : "") + ">" +
-      (m.contacted ? "已聯絡過" : "寫信給 " + esc(m.nickname)) + "</button></div>" +
+    '<div class="mfoot">' +
+      (m.isDemo ? '<span class="demonote">示範帳號，信箱不存在，無法聯絡</span>' : "") +
+      '<button class="btn primary small" data-write="' + esc(m.id) + '"' +
+      (m.contacted || m.isDemo ? " disabled" : "") + ">" +
+      (m.isDemo ? "無法聯絡" : m.contacted ? "已聯絡過" : "寫信給 " + esc(m.nickname)) +
+      "</button></div>" +
   "</article>";
 }
 
@@ -316,8 +320,11 @@ function loadMatches() {
   }
   return api("/api/match" + ($("show-blocked").checked ? "?all=1" : "")).then(function (j) {
     S.matches = j.matches;
+    var demos = j.matches.filter(function (m) { return m.isDemo; }).length;
     $("match-sub").textContent = "在 " + j.pool + " 位會員中，找到 " + j.matches.length +
-      " 位人選（依綜合契合度排序）。今日還可取用 " + j.quotaLeft + " 位對象的信箱。";
+      " 位人選（依綜合契合度排序）"
+      + (demos ? "，其中 " + demos + " 位是示範帳號、無法聯絡" : "")
+      + "。今日還可取用 " + j.quotaLeft + " 位對象的信箱。";
     $("match-list").innerHTML = j.matches.length
       ? j.matches.map(matchCard).join("")
       : '<div class="card"><p class="lead" style="margin:0">目前沒有符合條件的人選。' +
@@ -582,8 +589,14 @@ window.addEventListener("DOMContentLoaded", function () {
 
   $("btn-refresh").addEventListener("click", loadMatches);
   $("btn-best").addEventListener("click", function () {
-    var best = S.matches.filter(function (m) { return m.myView.pass && !m.contacted; })[0];
-    if (!best) { alert("目前沒有可聯絡的人選，先按「重新配對」或放寬條件。"); return; }
+    var best = S.matches.filter(function (m) {
+      return m.myView.pass && !m.contacted && !m.isDemo;
+    })[0];
+    if (!best) {
+      alert("目前沒有可聯絡的人選。示範帳號無法聯絡，"
+            + "等有真實會員加入，或放寬你的條件再試。");
+      return;
+    }
     openLetter(best.id, true);
   });
 

@@ -201,6 +201,7 @@ def normalize_profile(body, existing=None, email=None, verified=False):
         },
         # 這些欄位由伺服器掌握，前端改不動
         "verified": bool(existing.get("verified") or verified),
+        "isDemo": bool(existing.get("isDemo") or body.get("_demo")),
         "optOut": bool(existing.get("optOut")),
         "unsubToken": existing.get("unsubToken") or secrets.token_urlsafe(18),
         "createdAt": existing.get("createdAt") or now_iso(),
@@ -215,6 +216,11 @@ def find_by_id(users, uid):
 
 def find_by_email(users, email):
     return next((u for u in users if u.get("email") == email), None)
+
+
+def is_demo(u):
+    """示範帳號。既看旗標也看信箱網域，避免已經存在的資料需要搬移。"""
+    return bool(u.get("isDemo")) or str(u.get("email", "")).endswith("@example.com")
 
 
 def contactable(users):
@@ -364,8 +370,10 @@ class Handler(SimpleHTTPRequestHandler):
                     outbox = load_outbox()
                 contacted = set(r.get("toId") for r in outbox if r.get("fromId") == me["id"])
                 for r in rows:
-                    r["emailMasked"] = mask_email((find_by_id(users, r["id"]) or {}).get("email"))
+                    cand = find_by_id(users, r["id"]) or {}
+                    r["emailMasked"] = mask_email(cand.get("email"))
                     r["contacted"] = r["id"] in contacted
+                    r["isDemo"] = is_demo(cand)
                 return self._json({"ok": True, "matches": rows, "pool": len(pool) - 1,
                                    "quotaLeft": max(0, DAILY_SEND_LIMIT
                                                     - sends_today(outbox, me["id"]))})
@@ -435,6 +443,7 @@ class Handler(SimpleHTTPRequestHandler):
                     for demo in seed_mod.demo_users():
                         if demo["email"] in existing:
                             continue
+                        demo = dict(demo, _demo=True)
                         profile, err = normalize_profile(demo, None,
                                                          email=demo["email"], verified=True)
                         if err:
@@ -488,6 +497,8 @@ class Handler(SimpleHTTPRequestHandler):
                     return self._err("找不到對象", 404)
                 if not target.get("verified") or target.get("optOut"):
                     return self._err("對方目前不接受來信")
+                if is_demo(target):
+                    return self._err("這是示範帳號，信箱不存在，寄了也不會有人收到")
                 shared = matcher.shared_tags(me, target)
                 out = letters.compose(me, target, shared,
                                       style=body.get("style", "literary"),
@@ -508,6 +519,8 @@ class Handler(SimpleHTTPRequestHandler):
                     return self._err("找不到對象", 404)
                 if not target.get("verified") or target.get("optOut"):
                     return self._err("對方目前不接受來信")
+                if is_demo(target):
+                    return self._err("這是示範帳號，信箱不存在，寄了也不會有人收到")
                 subject = str(body.get("subject", "")).strip()[:150]
                 text = str(body.get("body", "")).strip()[:8000]
                 if not subject or not text:

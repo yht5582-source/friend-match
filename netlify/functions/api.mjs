@@ -81,14 +81,6 @@ export default async function handler(req) {
           configured: mailer.mailConfig().configured,
           from: "", dailyLimit: DAILY_SEND_LIMIT, selfSend: true,
         },
-        // 設定診斷：只回報「有沒有」，絕不回報任何值或變數名稱
-        // （變數名稱可能就是被貼錯位置的金鑰本身，所以連名稱都不能吐出來）
-        diag: {
-          hasResendKey: Boolean(process.env.RESEND_API_KEY),
-          hasMailFrom: Boolean(process.env.MAIL_FROM),
-          // 若有變數的「名稱」以 re_ 開頭，代表 Key/Value 填反了
-          looksSwapped: Object.keys(process.env).some((k) => k.startsWith("re_")),
-        },
       });
     }
 
